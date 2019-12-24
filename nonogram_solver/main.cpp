@@ -11,28 +11,38 @@ using namespace std;
 //const int LEN = 10;
 const int LEN = 5;
 
-
 struct header {
     vector<int> value; // can contain any number of values
     vector<string> options; // filled with getOptions()
 };
 
-class nonogram {
-public:
+class Nonogram {
     header r[LEN], c[LEN];
-//    int field[LEN][LEN];
+    int field[LEN][LEN];
     
-    int field[5][5] = {
-        {0, 1, 1, 1, 0},
-        {1, 1, 1, 1, 0},
-        {1, 1, 1, 1, 0},
-        {0, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1}
-    };
+public:
+    /* Correct field */
+//    int field[5][5] = {
+//        {0, 1, 1, 1, 0},
+//        {1, 1, 1, 1, 0},
+//        {1, 1, 1, 1, 0},
+//        {0, 1, 1, 1, 1},
+//        {1, 1, 1, 1, 1}
+//    };
+    
+    /* Constructor */
+    Nonogram() {
+        // initialize field
+        for (int r = 0; r < LEN; r++) {
+            for (int c = 0; c < LEN; c++) {
+                field[r][c] = 0;
+            }
+        }
+    }
     
     void readFile() {
         ifstream input;
-        input.open("/Users/filupnot/Desktop/2275/independent_stuff/nonogram_solver/nonogram_solver/game2.txt");
+        input.open("/Users/filupnot/Desktop/my_projects/nonogram_solver/game2.txt");
         if (!input.is_open()) {
             cout << "Error reading file." << endl;
             exit(0);
@@ -253,7 +263,8 @@ public:
             end = LEN - 1;
             iter = LEN - header.at(0) + 1;
         }
-        // <OOO-OO-O--> / (1): start = 0, end = 9, iter = 3
+        //  3   2  1
+        // <OOO-OO-O--> / (1): start = 7, end = 9, iter = 3
         //                (2): start = 4, end = 7, iter = 3
         //                (3): start = 0, end = 4, iter = 3
         else if (header.size() > 1) {
@@ -273,7 +284,7 @@ public:
 
 int main(int argc, char * argv[]) {
     
-    nonogram gram;
+    Nonogram gram;
     gram.readFile();
     gram.print();
     
