@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <math.h>
+#include <numeric>
 using namespace std;
 
 //const int LEN = 10;
@@ -13,11 +15,11 @@ const int LEN = 5;
 
 struct header {
     vector<int> value; // can contain any number of values
-    vector<string> options; // filled with getOptions()
+    vector<vector<int> > options; // filled with getOptions()
 };
 
 class Nonogram {
-    header r[LEN], c[LEN];
+    header row[LEN], col[LEN];
     int field[LEN][LEN];
     
 public:
@@ -38,11 +40,23 @@ public:
                 field[r][c] = 0;
             }
         }
+        
+        readFile();
+        
+//        solve();
+        
     }
     
     void readFile() {
         ifstream input;
-        input.open("/Users/filupnot/Desktop/my_projects/nonogram_solver/game2.txt");
+        
+        if (LEN == 10) {
+            input.open("/Users/filupnot/Desktop/nonogram_solver/nonogram_solver/game1.txt");
+        }
+        else if (LEN == 5) {
+            input.open("/Users/filupnot/Desktop/nonogram_solver/nonogram_solver/game2.txt");
+        }
+            
         if (!input.is_open()) {
             cout << "Error reading file." << endl;
             exit(0);
@@ -56,21 +70,42 @@ public:
             stringstream ss(line);
             string temp;
             while (ss >> temp) {
-                r[i].value.insert(r[i].value.begin(), stoi(temp));
+                row[i].value.push_back(stoi(temp));
             }
+            row[i].options = getOptions(row[i].value);
+            
             i++;
         }
         
+//        for (int i = 0; i < LEN; i++) {
+//            for (int j : row[i].value) cout << j << ' ';
+//            cout << endl;
+//        }
+//        cout << endl;
+        
         i = 0;
         while (getline(input, line)) {
-            stringstream ss(line);
+            if (line == "-") break;
             
+            stringstream ss(line);
             string temp;
-            while (ss >> temp) {
-                c[i].value.insert(c[i].value.begin(), stoi(temp));
+            while (getline(ss, temp, ' ')) {
+                col[i].value.push_back(stoi(temp));
             }
+            col[i].options = getOptions(col[i].value);
+            
             i++;
         }
+        
+//        for (int i = 0; i < LEN; i++) {
+//            for (int j : col[i].value) cout << j << ' ';
+//            cout << endl;
+//        }
+    }
+    
+    void print(vector<int> v) {
+        for (int i : v) cout << i << ' ';
+        cout << endl;
     }
     
     /* Long & complicated function to print out field */
@@ -81,7 +116,7 @@ public:
             max_y = 0; // biggest final index for rows
         
         // find start_x and max_x
-        for (header h : c) {
+        for (header h : col) {
             int temp = 0;
             
             // save largest value for max_x
@@ -103,7 +138,7 @@ public:
         }
         
         // find start_y and max_y
-        for (header h : r) {
+        for (header h : row) {
             int temp = 0;
             
             // save largest value for max_x
@@ -138,7 +173,7 @@ public:
             for (int s = 0; s < max_y; s++) cout << "   ";
             cout << "     ";
             
-            for (header h : c) {
+            for (header h : col) {
                 if (h.value.size() - 1 >= i) {
                     cout << h.value.at(i) << " "; // outputs number
                     if (h.value.at(i) < 10) cout << " "; // adds an extra space if the number is only one digit
@@ -156,7 +191,7 @@ public:
         
         // Row headers and field values
         int r_idx = 0;
-        for (header h : r) {
+        for (header h : row) {
             for (int i = max_y; i >= 0; i--) {
                 if (h.value.size() - 1 >= i) {
                     cout << h.value.at(i) << " "; // outputs number
@@ -180,11 +215,10 @@ public:
 
         // check columns
         for (int c_idx = 0; c_idx < LEN; c_idx++) {
-            header h = c[c_idx];
+            header h = col[c_idx];
             int fc = 0; // num of spaces filled consecutively
             int r_idx = 0; // current row index
             
-//            for (int num_idx = 0; num_idx < h.value.size(); num_idx++) {
             for (int num_idx = (int)h.value.size() - 1; num_idx >= 0; num_idx--) {
                 while (true) {
                     if (r_idx == LEN) { // reached end of column
@@ -216,7 +250,7 @@ public:
         
         // check rows
         for (int r_idx = 0; r_idx < LEN; r_idx++) {
-            header h = r[r_idx];
+            header h = row[r_idx];
             int fc = 0; // number of spaces filled consecutively
             int c_idx = 0; // current row index
             
@@ -251,44 +285,112 @@ public:
         return true;
     }
     
+    /* Reverses a vector passed */
+    void reverse(vector<int> &vec) {
+        vector<int> vec2;
+        for (int i = (int)vec.size() - 1; i >= 0; i--) {
+            vec2.push_back(vec.at(i));
+        }
+        vec.clear();
+        for (int i : vec2) vec.push_back(i);
+    }
+    
     /* Returns vector of all possible line options */
-    vector<int> getAllOptions(vector<int> header) {
-        vector<int> options;
-        int start = 0, // index to start
-            end, // index to end
-            iter; // number of iterations
+    vector<vector<int> > getOptions(vector<int> hdr) {
+        vector<vector<int> > options;
         
-        // <OOO-------> / start = 0, end = 9, iter = 8
-        if (header.size() == 1) {
-            end = LEN - 1;
-            iter = LEN - header.at(0) + 1;
+        // begin indices
+        vector<int> start_idx;
+        for (int i = 0; i < (int)hdr.size(); i++) {
+            int s = 0;
+            for (int j = i - 1; j >= 0; j--) s += hdr.at(j);
+            s = s + i;
+            start_idx.push_back(s);
         }
-        //  3   2  1
-        // <OOO-OO-O--> / (1): start = 7, end = 9, iter = 3
-        //                (2): start = 4, end = 7, iter = 3
-        //                (3): start = 0, end = 4, iter = 3
-        else if (header.size() > 1) {
-            
-            for (int i = 0; i < header.size() - 2; i++) {
-                start += header.at(i);
+        
+        // base of reference numbers (how many spots each chunk will/can move to)
+        int base = LEN - accumulate(hdr.begin(), hdr.end(), 0) - ((int)hdr.size() - 1) + 1;
+        
+        // number of elements in outer 'ref' vector, or how many cases (will) exist
+        int ref_size = pow(base, (int)hdr.size());
+        
+        // vector holding case vectors
+        vector<vector<int> > ref;
+        
+        // go through loop for each case, max cases = ref_size
+        for (int i = 0; i < ref_size; i++) {
+            // convert base
+            int temp = i;
+            vector<int> value;
+            int counter = (int)hdr.size();
+            while (counter > 0) {
+                value.push_back(temp % base);
+                temp /= base;
+                counter--;
             }
-            start += header.size() - 1;
+            
+            // pop cases who's digits decrease
+            bool good = true;
+            int max = value.at(0);
+            for (int j = 0; j < (int)hdr.size(); j++) {
+                if (value.at(j) > max) max = value.at(j);
+                if (value.at(j) < max) {
+                    good = false;
+                    break;
+                }
+            }
+            
+            // if digits decrease, don't add and move on. otherwise, it's good.
+            if (good) {
+                
+                // add starting values to convert to starting indices
+                for (int j = 0; j < (int)hdr.size(); j++) {
+                    value.at(j) = value.at(j) + start_idx.at(j);
+                }
+                ref.push_back(value);
+            }
         }
         
-        
-        
-        
+        // convert from reference beginning indices to actual arrays
+        for (vector<int> v : ref) {
+            // empty vector
+            vector<int> base;
+            for (int i = 0; i < LEN; i++) base.push_back(0);
+            
+            for (int i = 0; i < (int)hdr.size(); i++) {
+                int counter = hdr.at(i);
+                int j = v.at(i);
+                while (counter > 0) {
+                    base.at(j) = 1;
+                    j++;
+                    counter--;
+                }
+            }
+            options.push_back(base);
+        }
         return options;
+    }
+    
+    void solve() {
+        while (1) {
+            // cover rows, then columns, then repeat
+            for (int r = 0; r < LEN; r++) {
+                vector<int> h = row[r].value;
+                cout << h.size();
+//                for (int i : h) cout << i << endl;
+            }
+            
+        }
     }
 };
 
 int main(int argc, char * argv[]) {
     
     Nonogram gram;
-    gram.readFile();
-    gram.print();
     
-    cout << gram.isComplete() << endl;
+//    gram.print();
+    
+    cout << (gram.isComplete() ? "Completed!\n" : "");
     
     return 0;
 }
