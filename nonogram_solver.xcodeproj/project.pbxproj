@@ -27,6 +27,7 @@
 		D39A779823B2AD0C004E2ACB /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D39A779923B2AD0D004E2ACB /* game1.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = game1.txt; sourceTree = "<group>"; };
 		D39A779A23B2AD0D004E2ACB /* game2.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = game2.txt; sourceTree = "<group>"; };
+		D3B7C26D240231C60057395A /* game3.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = game3.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +60,7 @@
 		D39A778C23B2AC2D004E2ACB /* nonogram_solver */ = {
 			isa = PBXGroup;
 			children = (
+				D3B7C26D240231C60057395A /* game3.txt */,
 				D39A779923B2AD0D004E2ACB /* game1.txt */,
 				D39A779A23B2AD0D004E2ACB /* game2.txt */,
 				D39A779823B2AD0C004E2ACB /* main.cpp */,

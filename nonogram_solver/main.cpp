@@ -11,11 +11,13 @@
 using namespace std;
 
 //const int LEN = 10;
-const int LEN = 5;
+//const int LEN = 5;
+const int LEN = 15;
 
 struct header {
     vector<int> value; // can contain any number of values
     vector<vector<int> > options; // filled with getOptions()
+    bool solved = false;
 };
 
 class Nonogram {
@@ -23,7 +25,7 @@ class Nonogram {
     int field[LEN][LEN];
     
 public:
-    /* Correct field */
+    /* Correct field for game1 */
 //    int field[5][5] = {
 //        {0, 1, 1, 1, 0},
 //        {1, 1, 1, 1, 0},
@@ -43,7 +45,10 @@ public:
         
         readFile();
         
-//        solve();
+        solve();
+        
+        cout << "Solved!" << endl;
+        print();
         
     }
     
@@ -55,6 +60,9 @@ public:
         }
         else if (LEN == 5) {
             input.open("/Users/filupnot/Desktop/nonogram_solver/nonogram_solver/game2.txt");
+        }
+        else if (LEN == 15) {
+            input.open("/Users/filupnot/Desktop/nonogram_solver/nonogram_solver/game3.txt");
         }
             
         if (!input.is_open()) {
@@ -77,12 +85,6 @@ public:
             i++;
         }
         
-//        for (int i = 0; i < LEN; i++) {
-//            for (int j : row[i].value) cout << j << ' ';
-//            cout << endl;
-//        }
-//        cout << endl;
-        
         i = 0;
         while (getline(input, line)) {
             if (line == "-") break;
@@ -96,11 +98,6 @@ public:
             
             i++;
         }
-        
-//        for (int i = 0; i < LEN; i++) {
-//            for (int j : col[i].value) cout << j << ' ';
-//            cout << endl;
-//        }
     }
     
     void print(vector<int> v) {
@@ -159,23 +156,17 @@ public:
             if (temp > start_y) start_y = temp;
         }
         
-//        cout << "start_x: " << start_x << endl;
-//        cout << "max_x: " << max_x << endl;
-//        cout << "start_y: " << start_y << endl;
-//        cout << "max_y: " << max_y << endl;
-        
         // Column headers
         cout << endl;
         for (int i = max_x; i >= 0; i--) { // iterate through each number
              
 //            // start over the right distance away
-//            for (int s = 0; s < start_x; s++) cout << "   ";
             for (int s = 0; s < max_y; s++) cout << "   ";
             cout << "     ";
             
             for (header h : col) {
                 if (h.value.size() - 1 >= i) {
-                    cout << h.value.at(i) << " "; // outputs number
+                    cout << h.value.at(h.value.size() - 1 - i) << " "; // outputs number in correct order
                     if (h.value.at(i) < 10) cout << " "; // adds an extra space if the number is only one digit
                 }
                 else cout << "   "; // no number to output => fill spaces
@@ -194,7 +185,7 @@ public:
         for (header h : row) {
             for (int i = max_y; i >= 0; i--) {
                 if (h.value.size() - 1 >= i) {
-                    cout << h.value.at(i) << " "; // outputs number
+                    cout << h.value.at(h.value.size() - 1 - i) << " "; // outputs number in correct order
                     if (h.value.at(i) < 10) cout << " "; // adds an extra space if the number is only one digit
                 }
                 else cout << "   "; // no number to output => fill spaces
@@ -212,76 +203,8 @@ public:
     
     /* Returns true if the game is completed */
     bool isComplete() {
-
-        // check columns
-        for (int c_idx = 0; c_idx < LEN; c_idx++) {
-            header h = col[c_idx];
-            int fc = 0; // num of spaces filled consecutively
-            int r_idx = 0; // current row index
-            
-            for (int num_idx = (int)h.value.size() - 1; num_idx >= 0; num_idx--) {
-                while (true) {
-                    if (r_idx == LEN) { // reached end of column
-                        if (fc != h.value.at(num_idx) || num_idx != 0) {
-                            return false; // wrong length of stream at end => incomplete
-                        }
-                        else {
-                            r_idx++;
-                            break;
-                        }
-                    }
-                    if (field[r_idx][c_idx] == 1) {
-                        fc++;
-                    }
-                    else {
-                        if (fc != h.value.at(num_idx) && fc > 0) { // wrong length of stream => incomplete
-                            return false;
-                        }
-                        else if (fc == h.value.at(num_idx)) { // correct length => set fc to zero and move onto next num
-                            fc = 0;
-                            r_idx++;
-                            break;
-                        }
-                    }
-                    r_idx++;
-                }
-            }
-        }
-        
-        // check rows
-        for (int r_idx = 0; r_idx < LEN; r_idx++) {
-            header h = row[r_idx];
-            int fc = 0; // number of spaces filled consecutively
-            int c_idx = 0; // current row index
-            
-            for (int num_idx = (int)h.value.size() - 1; num_idx >= 0; num_idx--) {
-                while (true) {
-                    if (c_idx == LEN) {
-                        if (fc != h.value.at(num_idx) || num_idx != 0) {
-                            return false; // wrong length of stream at end => incomplete
-                        }
-                        else {
-                            c_idx++;
-                            break;
-                        }
-                    }
-                    if (field[r_idx][c_idx] == 1) {
-                        fc++;
-                    }
-                    else {
-                        if (fc != h.value.at(num_idx) && fc > 0) { // wrong length of stream => incomplete
-                            return false;
-                        }
-                        else if  (fc == h.value.at(num_idx)) { // correct length => set fc to zero and move onto next num
-                            fc = 0;
-                            c_idx++;
-                            break;
-                        }
-                    }
-                    c_idx++;
-                }
-            }
-        }
+        for (header r : row) if (!r.solved) return false;
+        for (header c : col) if (!c.solved) return false;
         return true;
     }
     
@@ -371,16 +294,139 @@ public:
         return options;
     }
     
+    /* Solves game (hopefully)
+     How it works:
+        -Starts by examining all options
+        -Compares all options to what's currently on the field. Options that contradict
+    what's on the field are erased.
+        -Take the options left and create a 'super' case, containing all the overlapping
+    values from each option
+        -Copy what's on the super class onto the line (1s and -1s, or Os and Xs)
+        -Repeat until each header has only one option left / isComlpete() returns true!
+     */
     void solve() {
+        int overflow_ctr = 0;
+        
         while (1) {
+            if (overflow_ctr == 50) throw -1; // unsolvable without guesses
+            if (isComplete()) break; // done!
+            
             // cover rows, then columns, then repeat
+            // first, rows
             for (int r = 0; r < LEN; r++) {
-                vector<int> h = row[r].value;
-                cout << h.size();
-//                for (int i : h) cout << i << endl;
+                
+                // if it's already solved, move on
+                if (row[r].solved) continue;
+                
+                // easily-accessible options vector
+                vector<vector<int> > *options = &row[r].options;
+                
+                // create vector for current 'line' being observed
+                vector<int> line;
+                for (int c = 0; c < LEN; c++) {
+                    line.push_back(field[r][c]);
+                }
+                
+                // get rid of options that don't support line
+                for (int i = 0; i < (int)options->size(); i++) {
+                    
+                    vector<int> *v = &row[r].options.at(i);
+
+                    for (int j = 0; j < LEN; j++) {
+                        if ((line.at(j) == 1 && v->at(j) == 0) ||
+                            (line.at(j) == -1 && v->at(j) == 1)) {
+                            options->erase(options->begin() + i);
+                            i--;
+                            break;
+                        }
+                    }
+                }
+                
+                // create "super" line, or line with shared values throughout all options
+                vector<int> super = row[r].options.at(0);
+                for (int i = 0; i < LEN; i++) if (super.at(i) == 0) super.at(i) = -1;
+                
+                // iterate through all options, save shared values to super
+                for (vector<int> v : *options) {
+                    for (int i = 0; i < LEN; i++) {
+                        if (v.at(i) == 0 && super.at(i) == 1) {
+                            super.at(i) = 0;
+                        }
+                        else if (v.at(i) == 1 && super.at(i) == -1) {
+                            super.at(i) = 0;
+                        }
+                    }
+                }
+                
+                // add super to line
+                for (int i = 0; i < LEN; i++) {
+                    if (super.at(i) != 0) line.at(i) = super.at(i);
+                    
+                    // push line to board
+                    field[r][i] = line.at(i);
+                }
+                
+                if (row[r].options.size() == 1) row[r].solved = true;
             }
             
+            // now, columns
+            for (int c = 0; c < LEN; c++) {
+                            
+                // if it's already solved, move on
+                if (col[c].solved) continue;
+                
+                // easily-accessible options vector
+                vector<vector<int> > *options = &col[c].options;
+                
+                // create vector for current 'line' being observed
+                vector<int> line;
+                for (int r = 0; r < LEN; r++) {
+                    line.push_back(field[r][c]);
+                }
+                
+                // get rid of options that don't support line
+                for (int i = 0; i < (int)options->size(); i++) {
+                    
+                    vector<int> *v = &col[c].options.at(i);
+
+                    for (int j = 0; j < LEN; j++) {
+                        if ((line.at(j) == 1 && v->at(j) == 0) ||
+                            (line.at(j) == -1 && v->at(j) == 1)) {
+                            options->erase(options->begin() + i);
+                            i--;
+                            break;
+                        }
+                    }
+                }
+                
+                // create "super" line, or line with shared values throughout all options
+                vector<int> super = col[c].options.at(0);
+                for (int i = 0; i < LEN; i++) if (super.at(i) == 0) super.at(i) = -1;
+                
+                // iterate through all options, save shared values to super
+                for (vector<int> v : *options) {
+                    for (int i = 0; i < LEN; i++) {
+                        if (v.at(i) == 0 && super.at(i) == 1) {
+                            super.at(i) = 0;
+                        }
+                        else if (v.at(i) == 1 && super.at(i) == -1) {
+                            super.at(i) = 0;
+                        }
+                    }
+                }
+                
+                // add super to line
+                for (int i = 0; i < LEN; i++) {
+                    if (super.at(i) != 0) line.at(i) = super.at(i);
+                    
+                    // push line to board
+                    field[i][c] = line.at(i);
+                }
+                
+                if (col[c].options.size() == 1) col[c].solved = true;
+            }
         }
+        // repeat process
     }
 };
 
@@ -390,7 +436,7 @@ int main(int argc, char * argv[]) {
     
 //    gram.print();
     
-    cout << (gram.isComplete() ? "Completed!\n" : "");
+//    cout << (gram.isComplete() ? "Completed!\n" : "");
     
     return 0;
 }
